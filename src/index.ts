@@ -289,7 +289,13 @@ async function loadCredentialsAndRunServer() {
   }
 
   const credentials = JSON.parse(fs.readFileSync(credentialsPath, "utf-8"));
-  const auth = new google.auth.OAuth2();
+  // PATCH: upstream initializes OAuth2 without client_id/client_secret, so token
+  // refresh silently fails after the 1-hour access token expires. Fix: load keys
+  // from gcp-oauth.keys.json and pass them so the library can auto-refresh.
+  // See: https://github.com/zcaceres/gtasks-mcp (bug in loadCredentialsAndRunServer)
+  const oauthKeys = JSON.parse(fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), "../gcp-oauth.keys.json"), "utf-8"));
+  const { client_id, client_secret, redirect_uris } = oauthKeys.installed ?? oauthKeys.web;
+  const auth = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
   auth.setCredentials(credentials);
   google.options({ auth });
 
