@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 import { authenticate } from "@google-cloud/local-auth";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -124,7 +124,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             due: {
               type: "string",
-              description: "Due date",
+              description: "Due date (YYYY-MM-DD or ISO 8601 format, e.g. 2025-03-19)",
             },
           },
           required: ["title"],
@@ -195,7 +195,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             due: {
               type: "string",
-              description: "Due date",
+              description: "Due date (YYYY-MM-DD or ISO 8601 format, e.g. 2025-03-19)",
             },
           },
           required: ["id", "uri"],
