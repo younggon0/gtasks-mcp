@@ -9,6 +9,24 @@ import { tasks_v1 } from "googleapis";
 
 const MAX_TASK_RESULTS = 100;
 
+/**
+ * Normalize a due date string to RFC 3339 format expected by Google Tasks API.
+ * Google Tasks only stores the date portion, so time is set to midnight UTC.
+ * Accepts: "2025-03-19", "2025-03-19T21:00:00", "2025-03-19T21:00:00Z", etc.
+ */
+export function normalizeDueDate(due: string | undefined): string | undefined {
+  if (!due) return undefined;
+  const parsed = new Date(due);
+  if (isNaN(parsed.getTime())) {
+    throw new Error(`Invalid due date format: "${due}". Use YYYY-MM-DD or ISO 8601 format.`);
+  }
+  // Google Tasks only uses the date portion, so normalize to midnight UTC
+  const year = parsed.getUTCFullYear();
+  const month = String(parsed.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}T00:00:00.000Z`;
+}
+
 export class TaskResources {
   static async read(request: ReadResourceRequest, tasks: tasks_v1.Tasks) {
     const taskId = request.params.uri.replace("gtasks:///", "");
@@ -124,18 +142,17 @@ export class TaskActions {
       (request.params.arguments?.taskListId as string) || "@default";
     const taskTitle = request.params.arguments?.title as string;
     const taskNotes = request.params.arguments?.notes as string;
-    const taskStatus = request.params.arguments?.status as string;
     const taskDue = request.params.arguments?.due as string;
 
     if (!taskTitle) {
       throw new Error("Task title is required");
     }
 
-    const task = {
+    const task: Record<string, string> = {
       title: taskTitle,
-      notes: taskNotes,
-      due: taskDue,
     };
+    if (taskNotes) task.notes = taskNotes;
+    if (taskDue) task.due = normalizeDueDate(taskDue)!;
 
     const taskResponse = await tasks.tasks.insert({
       tasklist: taskListId,
@@ -171,13 +188,13 @@ export class TaskActions {
       throw new Error("Task ID is required");
     }
 
-    const task = {
+    const task: Record<string, string> = {
       id: taskId,
-      title: taskTitle,
-      notes: taskNotes,
-      status: taskStatus,
-      due: taskDue,
     };
+    if (taskTitle) task.title = taskTitle;
+    if (taskNotes) task.notes = taskNotes;
+    if (taskStatus) task.status = taskStatus;
+    if (taskDue) task.due = normalizeDueDate(taskDue)!;
 
     const taskResponse = await tasks.tasks.update({
       tasklist: taskListId,
