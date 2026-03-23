@@ -5,7 +5,11 @@
   "license": "MIT",
   "author": "zcaceres (@zachcaceres zach.dev)",
   "homepage": "https://modelcontextprotocol.io",
-  "bugs": "https://github.com/modelcontextprotocol/servers/issues",
+  "bugs": "https://github.com/younggon0/gtasks-mcp/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/younggon0/gtasks-mcp.git"
+  },
   "type": "module",
   "bin": {
     "mcp-server-gtasks": "dist/index.js"
